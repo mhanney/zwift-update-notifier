@@ -1,0 +1,12 @@
+{
+  "name": "zwift-update-notifier",
+  "stage": "dev",  
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.py",
+  "scripts": {
+    "deploy": "serverless deploy",
+    "remove": "serverless remove"
+  },
+  "license": "MIT"  
+}

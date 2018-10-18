@@ -1,0 +1,56 @@
+service: zwift-update-notifier
+custom:
+  name: ${file(package.json):name}
+  snsTopicName: ${self:custom.name}-${self:provider.stage}
+provider:
+  name: aws
+  runtime: python3.6
+  stage: ${file(package.json):stage}
+  profile: ${file(config.json):provider.profile}
+  region: ${file(config.json):provider.region}
+  iamRoleStatements:
+    - Effect: Allow
+      Action:
+        - "sns:*"
+      Resource:
+        - "Fn::Join":
+          - ":"
+          - - "arn:aws:sns"
+            - Ref: "AWS::Region"
+            - Ref: "AWS::AccountId"
+            - ${self:custom.snsTopicName}
+resources:
+  Resources:
+    SnsTopic:
+      Type: AWS::SNS::Topic
+      Properties:
+        DisplayName: ${self:custom.snsTopicName}
+        TopicName: ${self:custom.snsTopicName}
+
+package:
+  include:
+    - main.py
+    - lib/**
+  exclude:
+    - test/**
+    - .serverless/**
+    - serverless.yml
+    - .gitignore
+    - node_modules/**
+    - README.md
+    - .vscode/**
+    - pacakge*.json
+    - config*.json
+
+functions:
+  handler:
+    handler: main.handler
+    name: ${self:service.name}-handler-${self:provider.stage}
+    memorySize: 128
+    timeout: 60
+    reservedConcurrency: 1
+    events:
+      - schedule: rate(5 minutes)
+    environment:
+      SNS_TOPIC_ARN:
+        Ref: SnsTopic
